@@ -1,18 +1,18 @@
-# Python cache and bytecode
-__pycache__/
-*.py[cod]
-*.pyo
-*.pyd
+# .NET build outputs
+bin/
+obj/
 
-# Local environments
-.venv/
-venv/
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
 
-# Local env files
-.env
-.env.*
-!.env.example
+# Rider
+.idea/
 
-# Local runtime artifacts
-db.sqlite3
+# VS Code
+.vscode/
+
+# OS
 .DS_Store

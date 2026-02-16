@@ -1,6 +1,13 @@
-# Calendar API
+# Portfolio Calendar API (Minimal API)
 
-Django + DRF backend for scheduling contact calls used by the portfolio site.
+Stateless C# Minimal API that receives appointment requests from the frontend
+and publishes `appointments.created` events to Kafka.
+
+## Why C#?
+
+I’m not an expert in C#, but this service is meant to demonstrate language-
+agnostic fundamentals: clear contracts, explicit boundaries, reliable messaging,
+and a thin HTTP surface for a single responsibility.
 
 ## Portfolio Stack Description
 
@@ -16,85 +23,12 @@ This repo references shared boundaries as submodules:
 - `infra/messaging` -> `portfolio-infra-messaging`
 - `contracts/notifier` -> `portfolio-notifier-contracts`
 
-## Current Scope
+## Endpoints
 
-- Time slot CRUD via `/api/timeslots`
-- Day filter endpoint via `/api/timeslots/by-day?date=YYYY-MM-DD`
-- Optional contact creation on booking
-- Custom Django admin at `/admin/`
-- Health endpoint at `/healthz`
+- `GET /healthz`
+- `POST /api/appointments`
 
-## Quickstart (Local)
-
-1. Create and activate a virtual environment:
-   ```bash
-   python3 -m venv .venv
-   source .venv/bin/activate
-   ```
-2. Create env file:
-   ```bash
-   cp .env.example .env
-   ```
-3. Install dependencies and migrate:
-   ```bash
-   make setup
-   ```
-4. Run the API:
-   ```bash
-   make runserver
-   ```
-
-The API runs on `http://localhost:8000`.
-
-## Environment Variables
-
-See `.env.example` for defaults.
-
-- `SECRET_KEY`
-- `DEBUG`
-- `ALLOWED_HOSTS` (comma-separated)
-- `TIME_ZONE`
-- `CORS_ALLOWED_ORIGINS` (comma-separated)
-- `CSRF_TRUSTED_ORIGINS` (comma-separated)
-- `KAFKA_PRODUCER_ENABLED`
-- `KAFKA_NOTIFY_EMAIL_DEFAULT`
-- `KAFKA_NOTIFY_SMS_DEFAULT`
-- `KAFKA_BOOTSTRAP_SERVERS`
-- `KAFKA_TOPIC_APPOINTMENTS_CREATED`
-- `KAFKA_TOPIC_APPOINTMENTS_CREATED_DLQ`
-
-## Kafka Producer Integration
-
-`calendar_api` publishes `appointments.created` events when a new `TimeSlot` is created and:
-- `KAFKA_PRODUCER_ENABLED=true`
-- the timeslot has a contact with a non-empty email
-
-Publishing uses `kafka-notifications-lib` (`notifier_microservice`) and sends
-payloads shaped for the notifier worker.
-
-Default behavior is safe for local development: producer is disabled until
-explicitly enabled.
-
-Contract schemas for these payloads are tracked at:
-- `contracts/notifier/events/appointments.created.schema.json` (producer contract)
-- `contracts/notifier/events/appointments.created.dlq.schema.json` (DLQ envelope)
-
-## API Endpoints
-
-- `GET /healthz` - service health check
-- `GET /api/timeslots` - list slots (supports `?is_active=true|false`)
-- `POST /api/timeslots` - create slot
-- `GET /api/timeslots/{id}` - get one slot
-- `PUT /api/timeslots/{id}` - update slot
-- `DELETE /api/timeslots/{id}` - delete slot
-- `GET /api/timeslots/by-day?date=YYYY-MM-DD` - list slots for one date
-
-Notes:
-- Router uses `trailing_slash=False`, so endpoints are defined without trailing `/`.
-- `duration_minutes` defaults to `30` and can be set for internal/admin use.
-- Public bookings (nested `contact` + `timeslot` payload) enforce 30-minute slots between 10:00 and 17:30.
-
-### Example Booking Payload (contact + timeslot)
+### POST /api/appointments (request)
 
 ```json
 {
@@ -102,38 +36,79 @@ Notes:
     "firstName": "Nick",
     "lastName": "A",
     "email": "nick@example.com",
-    "phone": "1234567890",
+    "phone": "+15551234567",
     "timezone": "America/Los_Angeles"
   },
-  "timeslot": {
+  "appointment": {
     "topic": "Intro Call",
     "start_time": "2026-02-20T10:00:00Z",
-    "end_time": "2026-02-20T10:45:00Z"
+    "end_time": "2026-02-20T10:30:00Z"
   }
 }
 ```
 
-## Useful Commands
+### Response (accepted)
 
-```bash
-make help
-make check
-make test
-make shell
-make clean
+```json
+{
+  "appointment_id": "timeslot-1708440000000",
+  "event_id": "evt-550e8400-e29b-41d4-a716-446655440000",
+  "kafka_enabled": true,
+  "published": true
+}
 ```
 
-## Docker
+## Kafka Event Contract
 
-Build and run directly from this repo:
+Events follow the schemas in:
 
-```bash
-make docker-build
-make docker-run
-```
+- `contracts/notifier/events/appointments.created.schema.json`
+- `contracts/notifier/events/appointments.created.dlq.schema.json`
 
-Or run with Docker Compose from this repo:
+This API is stateless and does not persist appointments. The event stream is the
+system of record; a dashboard/read model can be built from Kafka later.
+
+## CORS / Domain Restriction
+
+CORS is configured via `ALLOWED_ORIGINS` (comma-separated). This only restricts
+browser-based calls; it is not a security boundary for server-to-server traffic.
+If you need stronger protection, use auth tokens or mTLS.
+
+## Environment Variables
+
+- `CALENDAR_API_PORT` (default: `8000`)
+- `ALLOWED_ORIGINS` (default: `http://localhost:3000`)
+- `KAFKA_PRODUCER_ENABLED` (default: `false`)
+- `KAFKA_BOOTSTRAP_SERVERS` (default: `localhost:9094`)
+- `KAFKA_TOPIC_APPOINTMENTS_CREATED` (default: `appointments.created`)
+- `KAFKA_NOTIFY_EMAIL_DEFAULT` (default: `true`)
+- `KAFKA_NOTIFY_SMS_DEFAULT` (default: `false`)
+
+## Local Development
+
+### Docker (recommended)
 
 ```bash
 docker compose up --build
+```
+
+### Dotnet (if installed)
+
+```bash
+dotnet run
+```
+
+## Kafka Local Setup
+
+Start Kafka from `notifier_service`:
+
+```bash
+cd ../notifier_service
+docker compose up -d kafka kafka-init
+```
+
+Then enable publishing:
+
+```bash
+export KAFKA_PRODUCER_ENABLED=true
 ```

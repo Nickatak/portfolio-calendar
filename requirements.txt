@@ -1,7 +1,0 @@
-Django==4.2.8
-djangorestframework==3.14.0
-django-cors-headers==4.3.1
-python-dotenv==1.0.0
-pytz==2023.3
-Pillow==10.1.0
-kafka-notifications-lib @ https://github.com/Nickatak/notifier_microservice/archive/0e58624bee402dafc9657bf181309a0cfd726fcb.tar.gz
