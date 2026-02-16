@@ -1,0 +1,288 @@
+/* Modern Admin Form Styles */
+
+/* General Form Styling */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.form-row.field-time,
+.form-row.field-topic,
+.form-row.field-contact,
+.form-row.field-is_confirmed,
+.form-row.field-is_processed,
+.form-row.field-is_active {
+    grid-column: 1;
+}
+
+/* Fieldset Styling */
+.module {
+    background: #2d2d2d;
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 0;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.module h2 {
+    background: #1e3a5f;
+    color: #e0e0e0;
+    padding: 15px 20px;
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 8px 8px 0 0;
+}
+
+.module > *:not(h2):first-child {
+    padding: 20px;
+}
+
+fieldset {
+    padding: 0;
+    border: none;
+    margin: 0;
+}
+
+fieldset > div {
+    padding: 0 20px 20px 20px;
+}
+
+fieldset > div:first-child {
+    padding-top: 20px;
+}
+
+/* Label Styling */
+label {
+    color: #e0e0e0;
+    font-weight: 500;
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.required label::after {
+    content: "*";
+    color: #ff6b6b;
+    margin-left: 3px;
+}
+
+/* Input Styling */
+input[type="text"],
+input[type="email"],
+input[type="number"],
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+textarea,
+select {
+    width: 100%;
+    padding: 10px 12px;
+    background: #3a3a3a;
+    color: #e0e0e0;
+    border: 1px solid #444;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="number"]:focus,
+input[type="date"]:focus,
+input[type="time"]:focus,
+input[type="datetime-local"]:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    border-color: #60a5fa;
+    background: #424242;
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+}
+
+textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* Checkbox and Radio Styling */
+input[type="checkbox"],
+input[type="radio"] {
+    width: 18px;
+    height: 18px;
+    margin-right: 8px;
+    cursor: pointer;
+    accent-color: #60a5fa;
+}
+
+.checkbox-row {
+    display: flex;
+    align-items: center;
+    padding: 10px 0;
+}
+
+.checkbox-row label {
+    margin: 0;
+    display: inline;
+    margin-left: 8px;
+}
+
+/* Help Text */
+.help-text,
+p.help {
+    color: #b0b0b0;
+    font-size: 12px;
+    margin-top: 6px;
+    margin-bottom: 0;
+}
+
+/* Read-only Fields */
+.readonly {
+    padding: 10px 12px;
+    background: #3a3a3a;
+    border: 1px solid #444;
+    border-radius: 6px;
+    color: #e0e0e0;
+    min-height: 38px;
+    display: flex;
+    align-items: center;
+}
+
+/* Button Styling */
+.submit-row {
+    background: transparent;
+    border: none;
+    padding: 20px 0;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+input[type="submit"],
+.button {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+input[type="submit"] {
+    background: #60a5fa;
+    color: white;
+}
+
+input[type="submit"]:hover {
+    background: #93c5fd;
+    box-shadow: 0 4px 12px rgba(96, 165, 250, 0.3);
+    transform: translateY(-2px);
+}
+
+input[type="submit"]:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(96, 165, 250, 0.2);
+}
+
+.button.deletelink {
+    background: #ff6b6b;
+    color: white;
+}
+
+.button.deletelink:hover {
+    background: #ff8787;
+    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+}
+
+/* Breadcrumb */
+.breadcrumbs {
+    background: transparent;
+    padding: 10px 0;
+    border: none;
+}
+
+.breadcrumbs a {
+    color: #60a5fa;
+    text-decoration: none;
+}
+
+.breadcrumbs a:hover {
+    color: #93c5fd;
+    text-decoration: underline;
+}
+
+/* Error Messages */
+.errorlist {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0;
+}
+
+.errorlist li {
+    background: #ff6b6b;
+    color: white;
+    padding: 10px 12px;
+    border-radius: 6px;
+    margin-bottom: 5px;
+    font-size: 13px;
+}
+
+/* Messages */
+.messagelist {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0 20px 0;
+}
+
+.messagelist li {
+    background: #4ade80;
+    color: white;
+    padding: 12px 15px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+/* Inline Admin */
+.inline-related {
+    background: #2d2d2d;
+    border: 1px solid #444;
+    border-radius: 8px;
+    margin-top: 20px;
+    padding: 0;
+}
+
+.inline-related h3 {
+    background: #1e3a5f;
+    color: #e0e0e0;
+    padding: 15px 20px;
+    margin: 0;
+    border-radius: 8px 8px 0 0;
+}
+
+/* Form Container */
+.form-container {
+    background: #1a1a1a;
+}
+
+#content {
+    background: #1a1a1a;
+}
+
+/* Collapse Button */
+.collapse-toggle {
+    color: #60a5fa;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.collapse-toggle:hover {
+    color: #93c5fd;
+    text-decoration: underline;
+}

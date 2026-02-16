@@ -1,0 +1,18 @@
+# Python cache and bytecode
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Local environments
+.venv/
+venv/
+
+# Local env files
+.env
+.env.*
+!.env.example
+
+# Local runtime artifacts
+db.sqlite3
+.DS_Store

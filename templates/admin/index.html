@@ -1,0 +1,217 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static %}
+
+{% block extrahead %}
+<link rel="stylesheet" href="{% static 'admin/css/calendar_dashboard.css' %}">
+<script>
+function generateTimeslots() {
+    const button = event.target.closest('.btn');
+    const originalText = button.innerHTML;
+    button.innerHTML = '<span class="btn-icon">⏳</span> Generating...';
+    button.disabled = true;
+    
+    fetch('{% url "calendar_admin:generate_timeslots" %}')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + (data.error || 'Unknown error'));
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }
+        })
+        .catch(error => {
+            alert('Error generating timeslots: ' + error);
+            button.innerHTML = originalText;
+            button.disabled = false;
+        });
+}
+
+function deleteInactiveTimeslots() {
+    const button = event.target.closest('.btn');
+    const originalText = button.innerHTML;
+    button.innerHTML = '<span class="btn-icon">⏳</span> Deleting...';
+    button.disabled = true;
+    
+    fetch('{% url "calendar_admin:delete_inactive_timeslots" %}')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + (data.error || 'Unknown error'));
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }
+        })
+        .catch(error => {
+            alert('Error deleting timeslots: ' + error);
+            button.innerHTML = originalText;
+            button.disabled = false;
+        });
+}
+
+function filterCalendar() {
+    const filterValue = document.getElementById('statusFilter').value;
+    
+    if (filterValue === '') {
+        // Show all
+        window.location.href = `?status_filter=all`;
+    } else {
+        // Filter is handled server-side
+        window.location.href = `?status_filter=${filterValue}`;
+    }
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <!-- Control Panel -->
+    <div class="dashboard-section control-panel">
+        <h1>{% trans 'Calendar Administration' %}</h1>
+        <div class="control-toolbar">
+            <div class="toolbar-left">
+                <select class="filter-dropdown" id="statusFilter" onchange="filterCalendar()">
+                    <option value="all" {% if status_filter == 'all' %}selected{% endif %}>{% trans 'Every Timeslot' %}</option>
+                    <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>{% trans 'Pending' %}</option>
+                    <option value="confirmed" {% if status_filter == 'confirmed' %}selected{% endif %}>{% trans 'Confirmed' %}</option>
+                    <option value="processed" {% if status_filter == 'processed' %}selected{% endif %}>{% trans 'Processed' %}</option>
+                    <option value="active" {% if status_filter == 'active' %}selected{% endif %}>{% trans 'Active Only' %}</option>
+                </select>
+            </div>
+            <div class="toolbar-right">
+                <div class="control-buttons">
+                    <button class="btn btn-primary" onclick="generateTimeslots()">
+                        <span class="btn-icon">✨</span>
+                        {% trans 'Generate' %}
+                    </button>
+                    <button class="btn btn-secondary" onclick="alert('Coming soon: Add Timeslot')">
+                        <span class="btn-icon">+</span>
+                        {% trans 'Add Timeslot' %}
+                    </button>
+                    <button class="btn btn-secondary" onclick="alert('Coming soon: Add Contact')">
+                        <span class="btn-icon">+</span>
+                        {% trans 'Add Contact' %}
+                    </button>
+                    <button class="btn btn-secondary" onclick="alert('Coming soon: Export Data')">
+                        <span class="btn-icon">⬇</span>
+                        {% trans 'Export Data' %}
+                    </button>
+                    <button class="btn btn-secondary" onclick="alert('Coming soon: Settings')">
+                        <span class="btn-icon">⚙</span>
+                        {% trans 'Settings' %}
+                    </button>
+                    <button class="btn btn-danger" onclick="deleteInactiveTimeslots()">
+                        <span class="btn-icon">🗑</span>
+                        {% trans 'Delete Inactive' %}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Timeslot Statistics -->
+    <div class="dashboard-section">
+        <h2>{% trans 'Timeslot Overview' %}</h2>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>{% trans 'Total Timeslots' %}</h3>
+                <div class="value">{{ timeslot_stats.total }}</div>
+            </div>
+            <div class="stat-card confirmed">
+                <h3>{% trans 'Confirmed' %}</h3>
+                <div class="value">{{ timeslot_stats.confirmed }}</div>
+            </div>
+            <div class="stat-card pending">
+                <h3>{% trans 'Pending' %}</h3>
+                <div class="value">{{ timeslot_stats.pending }}</div>
+            </div>
+            <div class="stat-card processed">
+                <h3>{% trans 'Processed' %}</h3>
+                <div class="value">{{ timeslot_stats.processed }}</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Calendar Section -->
+    <div class="dashboard-section">
+        <h2>{% trans 'Calendar - Next 30 Days' %}</h2>
+        <div class="calendar-grid">
+            {% for day in calendar_days %}
+            <div class="calendar-day {% if day.is_today %}today{% endif %} {% if day.has_timeslots %}has-timeslots{% endif %}">
+                <div class="calendar-day-header">
+                    <div class="calendar-day-name">{{ day.day_name }}</div>
+                    <div class="calendar-day-num">{{ day.day_num }}</div>
+                    <div class="calendar-day-month">{{ day.month }}</div>
+                    {% if day.timeslot_count > 0 %}
+                    <div class="calendar-event-count">{{ day.timeslot_count }}</div>
+                    {% endif %}
+                </div>
+                <div class="calendar-day-content">
+                    {% if day.timeslots %}
+                        {% for timeslot in day.timeslots %}
+                        <div class="calendar-timeslot {% if timeslot.is_processed %}processed{% elif timeslot.is_confirmed %}confirmed{% else %}pending{% endif %}">
+                            <a href="{% url 'calendar_admin:calendar_api_timeslot_change' timeslot.id %}" title="{{ timeslot.contact.full_name|default:'No contact' }} - {{ timeslot.topic|default:'No topic' }}">
+                                <div class="timeslot-time">{{ timeslot.time|date:"H:i" }}</div>
+                                <div class="timeslot-contact">{{ timeslot.contact.first_name|default:"-" }}</div>
+                            </a>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Recent Timeslots -->
+    {% if recent_timeslots %}
+    <div class="module">
+        <h2>{% trans 'Recent Timeslots' %}</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>{% trans 'Time' %}</th>
+                    <th>{% trans 'Contact' %}</th>
+                    <th>{% trans 'Topic' %}</th>
+                    <th>{% trans 'Status' %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for timeslot in recent_timeslots %}
+                <tr>
+                    <td>
+                        <a href="{% url 'calendar_admin:calendar_api_timeslot_change' timeslot.id %}">
+                            {{ timeslot.time|date:"M d, Y H:i" }}
+                        </a>
+                    </td>
+                    <td>
+                        {% if timeslot.contact %}
+                            <a href="{% url 'calendar_admin:calendar_api_contact_change' timeslot.contact.id %}">
+                                {{ timeslot.contact.full_name }}
+                            </a>
+                        {% else %}
+                            <em>No contact</em>
+                        {% endif %}
+                    </td>
+                    <td>{{ timeslot.topic|default:"-" }}</td>
+                    <td>
+                        {% if timeslot.is_processed %}
+                            <span class="badge processed">{% trans 'Processed' %}</span>
+                        {% elif timeslot.is_confirmed %}
+                            <span class="badge confirmed">{% trans 'Confirmed' %}</span>
+                        {% else %}
+                            <span class="badge pending">{% trans 'Pending' %}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
