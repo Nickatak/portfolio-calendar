@@ -76,10 +76,10 @@ If you need stronger protection, use auth tokens or mTLS.
 
 ## Environment Variables
 
-- `CALENDAR_API_PORT` (default: `8000`)
+- `CALENDAR_API_PORT` (default: `8002`)
 - `ALLOWED_ORIGINS` (default: `http://localhost:3000`)
 - `KAFKA_PRODUCER_ENABLED` (default: `false`)
-- `KAFKA_BOOTSTRAP_SERVERS` (default: `localhost:9094`)
+- `KAFKA_BOOTSTRAP_SERVERS` (default: `localhost:9092`)
 - `KAFKA_TOPIC_APPOINTMENTS_CREATED` (default: `appointments.created`)
 - `KAFKA_NOTIFY_EMAIL_DEFAULT` (default: `true`)
 - `KAFKA_NOTIFY_SMS_DEFAULT` (default: `false`)

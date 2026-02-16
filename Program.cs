@@ -2,8 +2,16 @@ using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Confluent.Kafka;
+using Microsoft.AspNetCore.Hosting;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var calendarPort = Env.GetString("CALENDAR_API_PORT", "8002");
+var aspnetUrls = Environment.GetEnvironmentVariable("ASPNETCORE_URLS");
+if (string.IsNullOrWhiteSpace(aspnetUrls))
+{
+    builder.WebHost.UseUrls($"http://0.0.0.0:{calendarPort}");
+}
 
 var allowedOrigins = Env.GetCsv("ALLOWED_ORIGINS", new[] { "http://localhost:3000" });
 
@@ -156,7 +164,7 @@ internal sealed record KafkaSettings(
     {
         return new KafkaSettings(
             Enabled: Env.GetBool("KAFKA_PRODUCER_ENABLED", false),
-            BootstrapServers: Env.GetString("KAFKA_BOOTSTRAP_SERVERS", "localhost:9094"),
+            BootstrapServers: Env.GetString("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092"),
             TopicAppointmentsCreated: Env.GetString("KAFKA_TOPIC_APPOINTMENTS_CREATED", "appointments.created"),
             NotifyEmailDefault: Env.GetBool("KAFKA_NOTIFY_EMAIL_DEFAULT", true),
             NotifySmsDefault: Env.GetBool("KAFKA_NOTIFY_SMS_DEFAULT", false)
