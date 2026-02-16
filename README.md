@@ -2,6 +2,20 @@
 
 Django + DRF backend for scheduling contact calls used by the portfolio site.
 
+## Portfolio Stack Description
+
+Canonical system-wide architecture decisions and rationale live in the
+`portfolio` repo:
+
+`../portfolio/docs/architecture/repository-structure.md`
+
+## Boundary Submodules
+
+This repo references shared boundaries as submodules:
+
+- `infra/messaging` -> `portfolio-infra-messaging`
+- `contracts/notifier` -> `portfolio-notifier-contracts`
+
 ## Current Scope
 
 - Time slot CRUD via `/api/timeslots`
@@ -118,4 +132,8 @@ make docker-build
 make docker-run
 ```
 
-Or run as part of this monorepo from the root using Docker Compose.
+Or run with Docker Compose from this repo:
+
+```bash
+docker compose up --build
+```

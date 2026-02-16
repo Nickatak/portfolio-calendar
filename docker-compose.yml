@@ -1,0 +1,22 @@
+name: portfolio-calendar
+
+services:
+  calendar-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      SECRET_KEY: ${SECRET_KEY:-django-insecure-dev-key-change-in-production}
+      DEBUG: ${DEBUG:-True}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1}
+      TIME_ZONE: ${TIME_ZONE:-UTC}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000}
+      CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-}
+      KAFKA_PRODUCER_ENABLED: ${KAFKA_PRODUCER_ENABLED:-False}
+      KAFKA_NOTIFY_EMAIL_DEFAULT: ${KAFKA_NOTIFY_EMAIL_DEFAULT:-True}
+      KAFKA_NOTIFY_SMS_DEFAULT: ${KAFKA_NOTIFY_SMS_DEFAULT:-False}
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-localhost:9092}
+      KAFKA_TOPIC_APPOINTMENTS_CREATED: ${KAFKA_TOPIC_APPOINTMENTS_CREATED:-appointments.created}
+      KAFKA_TOPIC_APPOINTMENTS_CREATED_DLQ: ${KAFKA_TOPIC_APPOINTMENTS_CREATED_DLQ:-appointments.created.dlq}
+    ports:
+      - "${CALENDAR_API_PORT:-8000}:8000"

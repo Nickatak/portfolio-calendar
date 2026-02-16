@@ -1,0 +1,6 @@
+[submodule "infra/messaging"]
+	path = infra/messaging
+	url = git@github.com:Nickatak/portfolio-infra-messaging.git
+[submodule "contracts/notifier"]
+	path = contracts/notifier
+	url = git@github.com:Nickatak/portfolio-notifier-contracts.git
