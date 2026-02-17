@@ -14,7 +14,7 @@ and a thin HTTP surface for a single responsibility.
 Canonical system-wide architecture decisions and rationale live in the
 `portfolio` repo:
 
-`../portfolio/docs/architecture/repository-structure.md`
+`../portfolio-frontend/docs/architecture/repository-structure.md`
 
 ## Boundary Submodules
 
