@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Confluent.Kafka;
 using Microsoft.AspNetCore.Hosting;
+using PhoneNumbers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -55,7 +56,17 @@ app.MapPost("/api/appointments", async (
     ILogger<Program> logger,
     CancellationToken cancellationToken) =>
 {
-    var errors = AppointmentValidator.Validate(request);
+    var email = string.IsNullOrWhiteSpace(request.Contact?.Email)
+        ? null
+        : request.Contact.Email!.Trim();
+    var defaultPhoneRegion = Env.GetString("CONTACT_DEFAULT_PHONE_REGION", "US");
+    var phoneE164 = PhoneNormalizer.NormalizeE164(request.Contact?.Phone, defaultPhoneRegion);
+    var notifyEmailRequested = settings.NotifyEmailDefault;
+    var notifySmsRequested = settings.NotifySmsDefault;
+    var notifyEmail = notifyEmailRequested && email is not null;
+    var notifySms = notifySmsRequested && phoneE164 is not null;
+
+    var errors = AppointmentValidator.Validate(request, email, phoneE164, notifyEmail, notifySms);
     if (errors.Count > 0)
     {
         return Results.BadRequest(new { errors });
@@ -70,10 +81,6 @@ app.MapPost("/api/appointments", async (
     var endUtc = request.Appointment.EndTime.ToUniversalTime();
     var durationMinutes = (int)Math.Round((endUtc - startUtc).TotalMinutes, MidpointRounding.AwayFromZero);
 
-    var phoneE164 = PhoneNormalizer.NormalizeE164(request.Contact.Phone);
-    var notifyEmail = settings.NotifyEmailDefault;
-    var notifySms = settings.NotifySmsDefault && phoneE164 is not null;
-
     var payload = new AppointmentEvent(
         EventId: $"evt-{Guid.NewGuid()}",
         EventType: "appointments.created",
@@ -86,7 +93,7 @@ app.MapPost("/api/appointments", async (
             EndTime: endUtc.ToString("O", CultureInfo.InvariantCulture),
             DurationMinutes: durationMinutes,
             Time: startUtc.ToString("O", CultureInfo.InvariantCulture),
-            Email: request.Contact.Email!.Trim(),
+            Email: email,
             PhoneE164: phoneE164
         )
     );
@@ -247,7 +254,12 @@ internal sealed record KafkaPublishResult(bool Published, string? Error, string?
 
 internal static class AppointmentValidator
 {
-    public static List<string> Validate(AppointmentRequest request)
+    public static List<string> Validate(
+        AppointmentRequest request,
+        string? email,
+        string? phoneE164,
+        bool notifyEmail,
+        bool notifySms)
     {
         var errors = new List<string>();
 
@@ -257,9 +269,26 @@ internal static class AppointmentValidator
             return errors;
         }
 
-        if (string.IsNullOrWhiteSpace(request.Contact.Email))
+        if (notifyEmail && email is null)
         {
-            errors.Add("contact.email is required to publish an appointment");
+            errors.Add("contact.email is required when notify.email is enabled");
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Contact.Phone) && phoneE164 is null)
+        {
+            errors.Add("contact.phone must be a valid phone number");
+        }
+
+        if (notifySms && phoneE164 is null)
+        {
+            if (!string.IsNullOrWhiteSpace(request.Contact.Phone))
+            {
+                errors.Add("contact.phone must be a valid phone number when notify.sms is enabled");
+            }
+            else
+            {
+                errors.Add("contact.phone is required when notify.sms is enabled");
+            }
         }
 
         if (request.Appointment is null)
@@ -279,7 +308,7 @@ internal static class AppointmentValidator
 
 internal static class PhoneNormalizer
 {
-    public static string? NormalizeE164(string? value)
+    public static string? NormalizeE164(string? value, string? defaultRegion)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
@@ -287,18 +316,25 @@ internal static class PhoneNormalizer
         }
 
         var trimmed = value.Trim();
-        if (!trimmed.StartsWith('+'))
+        var region = string.IsNullOrWhiteSpace(defaultRegion)
+            ? "US"
+            : defaultRegion.Trim().ToUpperInvariant();
+
+        try
+        {
+            var util = PhoneNumberUtil.GetInstance();
+            var parsed = util.Parse(trimmed, region);
+            if (!util.IsValidNumber(parsed))
+            {
+                return null;
+            }
+
+            return util.Format(parsed, PhoneNumberFormat.E164);
+        }
+        catch (NumberParseException)
         {
             return null;
         }
-
-        var digits = trimmed[1..];
-        if (digits.Length < 8 || digits.Length > 15)
-        {
-            return null;
-        }
-
-        return digits.All(char.IsDigit) ? trimmed : null;
     }
 }
 
@@ -350,7 +386,7 @@ public sealed record AppointmentPayload(
     [property: JsonPropertyName("end_time")] string EndTime,
     [property: JsonPropertyName("duration_minutes")] int DurationMinutes,
     [property: JsonPropertyName("time")] string Time,
-    [property: JsonPropertyName("email")] string Email,
+    [property: JsonPropertyName("email")] string? Email,
     [property: JsonPropertyName("phone_e164")] string? PhoneE164
 );
 
