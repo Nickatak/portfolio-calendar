@@ -15,3 +15,10 @@ services:
       CONTACT_DEFAULT_PHONE_REGION: ${CONTACT_DEFAULT_PHONE_REGION:-US}
     ports:
       - "${CALENDAR_API_PORT:-8002}:8002"
+    networks:
+      - notifier
+
+networks:
+  notifier:
+    external: true
+    name: notifier_service_default
