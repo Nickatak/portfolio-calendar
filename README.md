@@ -1,27 +1,22 @@
-# Portfolio Calendar API (Minimal API)
+# Portfolio Calendar API
 
-Stateless C# Minimal API that receives appointment requests from the frontend
-and publishes `appointments.created` events to Kafka.
+Stateless C# Minimal API that receives appointment requests and publishes
+`appointments.created` events to Kafka.
 
-## Why C#?
+Full stack instructions live in the parent stack repo: `../README.md`.
 
-I’m not an expert in C#, but this service is meant to demonstrate language-
-agnostic fundamentals: clear contracts, explicit boundaries, reliable messaging,
-and a thin HTTP surface for a single responsibility.
+## Role In The System
 
-## Portfolio Stack Description
+- Receives booking requests from the frontend.
+- Validates/normalizes contact info.
+- Emits `appointments.created` events to Kafka for downstream consumers.
+- Remains stateless (no DB persistence).
 
-Canonical system-wide architecture decisions and rationale live in the
-`portfolio-frontend` repo:
+## Dependencies
 
-`../portfolio-frontend/docs/architecture/repository-structure.md`
-
-## Boundary Submodules
-
-This repo references shared boundaries as submodules:
-
-- `infra/messaging` -> `portfolio-infra-messaging`
-- `contracts/notifier` -> `portfolio-notifier-contracts`
+- Frontend: `../portfolio-frontend`
+- Notifications/Kafka: `../notifier_service`
+- BFF consumer (downstream): `../portfolio-bff`
 
 ## Endpoints
 
@@ -30,13 +25,13 @@ This repo references shared boundaries as submodules:
 
 ### POST /api/appointments (request)
 
-Contact requirements depend on enabled channels:
+Behavior notes:
 - `notify.email` is always emitted as `true` (owner notifications).
 - `notify.sms` is always emitted as `false` (SMS disabled for now).
-At least one valid contact method is required. If `contact.phone` is the only
-contact method (or SMS is enabled), it must be a valid phone number; otherwise
-an invalid phone is ignored. `contact.email` is optional and included in the
-payload when provided.
+- At least one valid contact method is required.
+- If `contact.phone` is the only contact method, it must be a valid phone number.
+  Otherwise invalid phone input is ignored.
+  `contact.email` is optional and included in the payload when provided.
 
 ```json
 {
@@ -98,29 +93,23 @@ If you need stronger protection, use auth tokens or mTLS.
 Prereqs:
 - .NET SDK 8.x (TargetFramework net8.0)
 
-### Docker (recommended)
+Run locally (no Docker):
+```bash
+dotnet run
+```
+
+Note: Kafka publishing is disabled by default. To publish events, set
+`KAFKA_PRODUCER_ENABLED=true` and ensure Kafka is running.
+
+## Docker Development
 
 ```bash
 docker compose up --build
 ```
 
-### Dotnet (if installed)
+This container expects Kafka reachable on the `notifier_service_default`
+network (e.g., `kafka:19092`).
 
-```bash
-dotnet run
-```
+## Ports
 
-## Kafka Local Setup
-
-Start Kafka from `notifier_service`:
-
-```bash
-cd ../notifier_service
-docker compose up -d kafka kafka-init
-```
-
-Then enable publishing:
-
-```bash
-export KAFKA_PRODUCER_ENABLED=true
-```
+- Calendar API: `8002`
