@@ -61,9 +61,8 @@ app.MapPost("/api/appointments", async (
         : request.Contact.Email!.Trim();
     var defaultPhoneRegion = Env.GetString("CONTACT_DEFAULT_PHONE_REGION", "US");
     var phoneE164 = PhoneNormalizer.NormalizeE164(request.Contact?.Phone, defaultPhoneRegion);
-    var notifyEmailRequested = settings.NotifyEmailDefault;
     var notifySmsRequested = settings.NotifySmsDefault;
-    var notifyEmail = notifyEmailRequested && email is not null;
+    var notifyEmail = true;
     var notifySms = notifySmsRequested && phoneE164 is not null;
 
     var errors = AppointmentValidator.Validate(request, email, phoneE164, notifyEmail, notifySms);
@@ -282,11 +281,6 @@ internal static class AppointmentValidator
             {
                 errors.Add("contact.email or contact.phone is required");
             }
-        }
-
-        if (notifyEmail && !hasEmail)
-        {
-            errors.Add("contact.email is required when notify.email is enabled");
         }
 
         if (notifySms && !hasPhone)

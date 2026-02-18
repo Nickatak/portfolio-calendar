@@ -31,13 +31,12 @@ This repo references shared boundaries as submodules:
 ### POST /api/appointments (request)
 
 Contact requirements depend on enabled channels:
-- If `notify.email` is enabled, `contact.email` is required.
+- `notify.email` is always emitted as `true` (owner notifications).
 - If `notify.sms` is enabled, `contact.phone` is required and normalized to E164.
-If a channel is enabled but the required contact detail is missing, the request
-is accepted but that channel is disabled for the emitted event.
 At least one valid contact method is required. If `contact.phone` is the only
 contact method (or SMS is enabled), it must be a valid phone number; otherwise
-an invalid phone is ignored.
+an invalid phone is ignored. `contact.email` is optional and included in the
+payload when provided.
 
 ```json
 {
@@ -90,7 +89,7 @@ If you need stronger protection, use auth tokens or mTLS.
 - `KAFKA_PRODUCER_ENABLED` (default: `false`)
 - `KAFKA_BOOTSTRAP_SERVERS` (default: `localhost:9092`)
 - `KAFKA_TOPIC_APPOINTMENTS_CREATED` (default: `appointments.created`)
-- `KAFKA_NOTIFY_EMAIL_DEFAULT` (default: `true`)
+- `KAFKA_NOTIFY_EMAIL_DEFAULT` (default: `true`, currently ignored)
 - `KAFKA_NOTIFY_SMS_DEFAULT` (default: `false`)
 - `CONTACT_DEFAULT_PHONE_REGION` (default: `US`)
 
