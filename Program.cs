@@ -262,6 +262,9 @@ internal static class AppointmentValidator
         bool notifySms)
     {
         var errors = new List<string>();
+        var hasEmail = email is not null;
+        var hasPhone = phoneE164 is not null;
+        var phoneProvided = !string.IsNullOrWhiteSpace(request.Contact?.Phone);
 
         if (request.Contact is null)
         {
@@ -269,19 +272,26 @@ internal static class AppointmentValidator
             return errors;
         }
 
-        if (notifyEmail && email is null)
+        if (!hasEmail && !hasPhone)
+        {
+            if (phoneProvided)
+            {
+                errors.Add("contact.phone must be a valid phone number");
+            }
+            else
+            {
+                errors.Add("contact.email or contact.phone is required");
+            }
+        }
+
+        if (notifyEmail && !hasEmail)
         {
             errors.Add("contact.email is required when notify.email is enabled");
         }
 
-        if (!string.IsNullOrWhiteSpace(request.Contact.Phone) && phoneE164 is null)
+        if (notifySms && !hasPhone)
         {
-            errors.Add("contact.phone must be a valid phone number");
-        }
-
-        if (notifySms && phoneE164 is null)
-        {
-            if (!string.IsNullOrWhiteSpace(request.Contact.Phone))
+            if (phoneProvided)
             {
                 errors.Add("contact.phone must be a valid phone number when notify.sms is enabled");
             }

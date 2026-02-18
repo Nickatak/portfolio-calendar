@@ -35,7 +35,9 @@ Contact requirements depend on enabled channels:
 - If `notify.sms` is enabled, `contact.phone` is required and normalized to E164.
 If a channel is enabled but the required contact detail is missing, the request
 is accepted but that channel is disabled for the emitted event.
-If `contact.phone` is provided, it must be a valid phone number.
+At least one valid contact method is required. If `contact.phone` is the only
+contact method (or SMS is enabled), it must be a valid phone number; otherwise
+an invalid phone is ignored.
 
 ```json
 {
