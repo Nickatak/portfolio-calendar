@@ -32,7 +32,7 @@ This repo references shared boundaries as submodules:
 
 Contact requirements depend on enabled channels:
 - `notify.email` is always emitted as `true` (owner notifications).
-- If `notify.sms` is enabled, `contact.phone` is required and normalized to E164.
+- `notify.sms` is always emitted as `false` (SMS disabled for now).
 At least one valid contact method is required. If `contact.phone` is the only
 contact method (or SMS is enabled), it must be a valid phone number; otherwise
 an invalid phone is ignored. `contact.email` is optional and included in the
@@ -90,7 +90,7 @@ If you need stronger protection, use auth tokens or mTLS.
 - `KAFKA_BOOTSTRAP_SERVERS` (default: `localhost:9092`)
 - `KAFKA_TOPIC_APPOINTMENTS_CREATED` (default: `appointments.created`)
 - `KAFKA_NOTIFY_EMAIL_DEFAULT` (default: `true`, currently ignored)
-- `KAFKA_NOTIFY_SMS_DEFAULT` (default: `false`)
+- `KAFKA_NOTIFY_SMS_DEFAULT` (default: `false`, currently ignored)
 - `CONTACT_DEFAULT_PHONE_REGION` (default: `US`)
 
 ## Local Development

@@ -63,7 +63,7 @@ app.MapPost("/api/appointments", async (
     var phoneE164 = PhoneNormalizer.NormalizeE164(request.Contact?.Phone, defaultPhoneRegion);
     var notifySmsRequested = settings.NotifySmsDefault;
     var notifyEmail = true;
-    var notifySms = notifySmsRequested && phoneE164 is not null;
+    var notifySms = false;
 
     var errors = AppointmentValidator.Validate(request, email, phoneE164, notifyEmail, notifySms);
     if (errors.Count > 0)
